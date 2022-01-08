@@ -1,5 +1,5 @@
 {
-    "name": "TRADFRI bulb E14 WS opal 400lm",
+    "name": "TRADFRI bulb E14 WS opal 400lm_debug",
     "standby_power": 0.44,
     "supported_modes": [
         "lut"
