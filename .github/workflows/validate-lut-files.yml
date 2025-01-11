@@ -1,13 +1,9 @@
 name: LUT file validation
 
 on:
-  pull_request_target:
+  pull_request:
     paths:
        - '**/*.csv.gz'
-
-permissions:
-  pull-requests: write
-  contents: read
 
 jobs:
   validate-lut:
@@ -79,22 +75,30 @@ jobs:
             const repo = context.repo;
             const prMessage = process.env.PR_MESSAGE;
             
-            const comments = await github.rest.issues.listComments({
+            // Authenticate with the PAT token
+            const octokit = github.getOctokit(process.env.PAT_TOKEN);
+            
+            // Fetch all comments on the PR
+            const comments = await octokit.rest.issues.listComments({
               owner: repo.owner,
               repo: repo.repo,
               issue_number: prNumber
             });
-
-            const existingComment = comments.data.find(comment => comment.body.includes('Thank you for submitting'));
+            
+            // Find the comment with a specific marker or unique text
+            const existingComment = comments.data.find(comment => comment.body.includes('Thank you for submitting light measurements!'));
+            
             if (existingComment) {
-              await github.rest.issues.updateComment({
+              // Update the existing comment
+              await octokit.rest.issues.updateComment({
                 owner: repo.owner,
                 repo: repo.repo,
                 comment_id: existingComment.id,
                 body: prMessage
               });
             } else {
-              await github.rest.issues.createComment({
+              // Create a new comment if no existing comment is found
+              await octokit.rest.issues.createComment({
                 owner: repo.owner,
                 repo: repo.repo,
                 issue_number: prNumber,
@@ -102,4 +106,5 @@ jobs:
               });
             }
         env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           PR_MESSAGE: ${{ steps.build-pr-message.outputs.PR_MESSAGE }}
